@@ -1,14 +1,17 @@
 <template>
   <transition name="modal-fade">
-    <div class="authModal" v-show="value">
+    <div class="authModal" v-show="authModalProps.authModalOpen">
       <div class="authContainer">
-        <loginForm />
-        <signupForm />
-        <button @click="closeModal">Close</button>
+        <div class="authWrapper">
+          <a @click="showLoginForm">Log In</a>
+          <a @click="showSignupForm">Sign Up</a>
+          <loginForm @closeModal="closeModal" v-show="authModalProps.loginFormOpen"/>
+          <signupForm @closeModal="closeModal" v-show="authModalProps.signupFormOpen"/>
+          <button @click="closeModal">Close</button>
+        </div>
       </div>
       <div class="authModalBackdrop" @click="closeModal"></div>
     </div>
-    
   </transition>
 </template>
 
@@ -23,13 +26,21 @@ export default {
     signupForm,
   },
   props: {
-    value: {
-      required: true,
+    authModalProps: {
+      authModalOpen: false,
+      loginFormOpen: false,
+      signupFormOpen: false,
     },
   },
   methods: {
     closeModal() {
-      this.$emit("input", !this.value);
+      this.$emit('toggleAuthModal');
+    },
+    showLoginForm() {
+      this.$emit('showLoginForm');
+    },
+    showSignupForm() {
+      this.$emit('showSignupForm');
     },
   },
 };
@@ -47,6 +58,10 @@ export default {
   transition: background-color 2s;
 
 }
+.authWrapper{
+  margin: 35px;
+}
+
 .authContainer {
   z-index:  2;
   position: fixed;
@@ -66,6 +81,15 @@ export default {
   .modal-fade-leave-active {
     opacity: 0;
   }
+
+a{
+  color: rgb(255, 255, 255);
+  text-decoration: none;
+  background-color: #0366EE;
+  border: 2px solid rgb(3, 91, 214);
+  border-radius: 3px;
+  margin: 0px 5px 0px 5px;
+}
 
   .modal-fade-enter-active,
   .modal-fade-leave-active {

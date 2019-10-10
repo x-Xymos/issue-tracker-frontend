@@ -30,16 +30,16 @@
 </template>
 <script>
 export default {
-  name: "signup-form",
+  name: 'signup-form',
   data() {
     return {
       submitting: false,
       error: false,
       success: false,
       account: {
-        username: "",
-        email: "",
-        password: "",
+        username: '',
+        email: '',
+        password: '',
       },
     };
   },
@@ -53,16 +53,16 @@ export default {
         return;
       }
 
-      //this.$emit("add:employee", this.employee);
       this.$refs.first.focus();
       this.account = {
-        username: "",
-        password: "",
-        email: "",
+        username: '',
+        password: '',
+        email: '',
       };
       this.error = false;
       this.success = true;
       this.submitting = false;
+      this.$emit('closeModal');
     },
     clearStatus() {
       this.success = false;
@@ -71,13 +71,13 @@ export default {
   },
   computed: {
     invalidUsername() {
-      return this.account.username === "";
+      return this.account.username === '';
     },
     invalidEmail() {
-      return this.account.email === "";
+      return this.account.email === '';
     },
     invalidPassword() {
-      return this.account.password === "";
+      return this.account.password === '';
     },
   },
 };
@@ -85,6 +85,13 @@ export default {
 <style scoped>
 form {
   margin-bottom: 2rem;
+}
+
+#signup-form{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 [class*="-message"] {

@@ -1,4 +1,4 @@
-<template> 
+<template>
 <div>
   <nav class="navbar-wrapper">
       <ul class="navbar-nav">
@@ -6,17 +6,17 @@
           <router-link class="nav-link" to="/">Home</router-link>
         </li>
         <li v-if="!authenticationStatus" class="nav-item">
-          <a class="nav-link" @click="openAuthModal">Log In</a>
+          <a class="nav-link" @click="toggleAuthModal('login')">Log In</a>
         </li>
         <li v-if="!authenticationStatus" class="nav-item">
-          <a class="nav-link" @click="openAuthModal" >Sign Up</a>
+          <a class="nav-link" @click="toggleAuthModal('signup')" >Sign Up</a>
         </li>
         <li v-if="authenticationStatus" class="nav-item">
           <router-link class="nav-link" to="/profile">Profile</router-link>
         </li>
       </ul>
   </nav>
-  <authModal v-model="authModalOpen" ></authModal>
+  <authModal @toggleAuthModal="toggleAuthModal()" @showLoginForm="showLoginForm" @showSignupForm="showSignupForm" v-bind:authModalProps="authModalProps"></authModal>
 </div>
 </template>
 <script>
@@ -27,14 +27,32 @@ export default {
   components: {
     authModal,
   },
-   data() {
+  data() {
     return {
-      authModalOpen: false,
+      authModalProps: {
+        authModalOpen: false,
+        loginFormOpen: false,
+        signupFormOpen: false,
+      },
     };
   },
-    methods: {
-    openAuthModal() {
-      this.authModalOpen = !this.authModalOpen;
+  methods: {
+    toggleAuthModal(form) {
+      this.authModalProps.authModalOpen = !this.authModalProps.authModalOpen;
+      if (form == 'login'){
+        this.showLoginForm();
+      }
+      else if (form == 'signup') {
+        this.showSignupForm();
+      }
+    },
+    showLoginForm() {
+      this.authModalProps.loginFormOpen = true;
+      this.authModalProps.signupFormOpen = false;
+    },
+    showSignupForm() {
+      this.authModalProps.signupFormOpen = true;
+      this.authModalProps.loginFormOpen = false;
     },
   },
   computed: {
@@ -47,10 +65,10 @@ export default {
 <style scoped>
 .navbar-wrapper{
 width: 100%;
-   position: fixed;
-    left: 0px;
-    top: 0px;
-    height: 40px;
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  height: 40px;
   background-color: #0366EE;
   border: 2px solid rgb(3, 91, 214);
 }
