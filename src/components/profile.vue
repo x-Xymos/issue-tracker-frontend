@@ -11,6 +11,11 @@ export default {
       title: 'Profile',
     };
   },
+  created() {
+    if (!this.$store.state.authenticated) {
+      this.$router.push('/') 
+    };
+  }
 };
 </script>
 <style scoped>

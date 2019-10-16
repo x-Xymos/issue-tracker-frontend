@@ -14,9 +14,15 @@
         <li v-if="authenticationStatus" class="nav-item">
           <router-link class="nav-link" to="/profile">Profile</router-link>
         </li>
+        <li v-if="authenticationStatus" class="nav-item">
+           <a class="nav-link" @click="logOut()" >Log out</a>
+        </li>
       </ul>
   </nav>
-  <authModal @toggleAuthModal="toggleAuthModal()" @showLoginForm="showLoginForm" @showSignupForm="showSignupForm" v-bind:authModalProps="authModalProps"></authModal>
+  <authModal @toggleAuthModal="toggleAuthModal()" @showLoginForm="showLoginForm"
+  @showSignupForm="showSignupForm"
+  v-bind:authModalProps="authModalProps">
+  </authModal>
 </div>
 </template>
 <script>
@@ -39,10 +45,9 @@ export default {
   methods: {
     toggleAuthModal(form) {
       this.authModalProps.authModalOpen = !this.authModalProps.authModalOpen;
-      if (form == 'login'){
+      if (form === 'login') {
         this.showLoginForm();
-      }
-      else if (form == 'signup') {
+      } else if (form === 'signup') {
         this.showSignupForm();
       }
     },
@@ -53,6 +58,10 @@ export default {
     showSignupForm() {
       this.authModalProps.signupFormOpen = true;
       this.authModalProps.loginFormOpen = false;
+    },
+    logOut() {
+      this.$store.dispatch('setAuthenticated', true);
+      localStorage.removeItem('token');
     },
   },
   computed: {

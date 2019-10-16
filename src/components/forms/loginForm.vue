@@ -1,12 +1,11 @@
 <template>
   <div id="login-form">
     <form @submit.prevent="handleSubmit">
-      <label>Username</label>
+      <label>Email</label>
       <input class="inputBox"
-        ref="first"
         type="text"
-        :class="{ 'has-error': submitting && invalidUsername }"
-        v-model="account.username"
+        :class="{ 'has-error': submitting && invalidemail }"
+        v-model="account.email"
         @focus="clearStatus"
         @keypress="clearStatus"
       />
@@ -22,6 +21,9 @@
   </div>
 </template>
 <script>
+
+import axios from 'axios';
+
 export default {
   name: 'login-form',
   data() {
@@ -30,7 +32,7 @@ export default {
       error: false,
       success: false,
       account: {
-        username: '',
+        email: '',
         password: '',
       },
     };
@@ -40,20 +42,37 @@ export default {
       this.submitting = true;
       this.clearStatus();
 
-      if (this.invalidUsername || this.invalidPassword) {
+      if (this.invalidemail || this.invalidPassword) {
         this.error = true;
         return;
       }
 
-      this.$refs.first.focus();
-      this.account = {
-        username: '',
-        password: '',
+      const data = {
+        email: this.account.email,
+        password: this.account.password,
       };
-      this.error = false;
-      this.success = true;
-      this.submitting = false;
-      this.$emit('closeModal');
+
+      axios.post('http://0.0.0.0:8880/api/login', data)
+        .then((response) => {
+          if (response.data.status === true) {
+            localStorage.setItem('token', response.data.token);
+            this.$store.dispatch('setAuthenticated', true);
+
+            this.account = {
+              email: '',
+              password: '',
+            };
+
+            this.error = false;
+            this.success = true;
+            this.submitting = false;
+
+            this.$emit('closeModal');
+          }
+        }).catch((e) => {
+          this.error = true;
+          console.log(e);
+        });
     },
     clearStatus() {
       this.success = false;
@@ -61,8 +80,8 @@ export default {
     },
   },
   computed: {
-    invalidUsername() {
-      return this.account.username === '';
+    invalidemail() {
+      return this.account.email === '';
     },
     invalidPassword() {
       return this.account.password === '';
