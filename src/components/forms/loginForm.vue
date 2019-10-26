@@ -23,6 +23,7 @@
 <script>
 
 import axios from 'axios';
+import loginApi from '@/endpoints/loginApi';
 
 export default {
   name: 'login-form',
@@ -31,6 +32,7 @@ export default {
       submitting: false,
       error: false,
       success: false,
+      errMsg: '',
       account: {
         email: '',
         password: '',
@@ -47,12 +49,7 @@ export default {
         return;
       }
 
-      const data = {
-        email: this.account.email,
-        password: this.account.password,
-      };
-
-      axios.post('http://0.0.0.0:8880/api/login', data)
+      axios.post(loginApi.login, this.account)
         .then((response) => {
           if (response.data.status === true) {
             localStorage.setItem('token', response.data.token);
@@ -71,12 +68,14 @@ export default {
           }
         }).catch((e) => {
           this.error = true;
-          console.log(e);
+          this.errMsg = e;
+          //  console.log(e);
         });
     },
     clearStatus() {
       this.success = false;
       this.error = false;
+      this.errMsg = '';
     },
   },
   computed: {

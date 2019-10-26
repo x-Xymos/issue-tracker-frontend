@@ -5,10 +5,10 @@
         <li class="nav-item">
           <router-link class="nav-link" to="/">Home</router-link>
         </li>
-        <li v-if="!authenticationStatus" class="nav-item">
+        <li v-if="authenticationStatus == false" class="nav-item">
           <a class="nav-link" @click="toggleAuthModal('login')">Log In</a>
         </li>
-        <li v-if="!authenticationStatus" class="nav-item">
+        <li v-if="authenticationStatus == false" class="nav-item">
           <a class="nav-link" @click="toggleAuthModal('signup')" >Sign Up</a>
         </li>
         <li v-if="authenticationStatus" class="nav-item">
@@ -60,8 +60,12 @@ export default {
       this.authModalProps.loginFormOpen = false;
     },
     logOut() {
-      this.$store.dispatch('setAuthenticated', true);
-      localStorage.removeItem('token');
+      this.$store.dispatch('setAuthenticated', false);
+      if (localStorage.getItem('token')) {
+        localStorage.removeItem('token');
+      }
+      this.$router.push({ name: 'home' });
+      this.$router.go();
     },
   },
   computed: {

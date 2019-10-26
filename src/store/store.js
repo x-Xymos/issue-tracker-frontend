@@ -6,7 +6,7 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     counter: 10,
-    authenticated: false,
+    authenticated: null,
   },
   getters: {},
   mutations: {

@@ -25,10 +25,15 @@
         @focus="clearStatus"
       />
       <button>Sign up</button>
+      <p v-if="this.resp.data.status" class="success-message">Successfully signed up</p>
     </form>
   </div>
 </template>
+
 <script>
+import axios from 'axios';
+import signupApi from '@/endpoints/signupApi';
+
 export default {
   name: 'signup-form',
   data() {
@@ -36,6 +41,8 @@ export default {
       submitting: false,
       error: false,
       success: false,
+      errMsg: '',
+      resp: '',
       account: {
         username: '',
         email: '',
@@ -52,17 +59,30 @@ export default {
         this.error = true;
         return;
       }
+      axios.post(signupApi.signup, this.account)
+        .then((response) => {
 
-      this.$refs.first.focus();
-      this.account = {
-        username: '',
-        password: '',
-        email: '',
-      };
-      this.error = false;
-      this.success = true;
-      this.submitting = false;
-      this.$emit('closeModal');
+          this.resp = response;
+
+          if (response.data.status === true) {
+
+            this.account = {
+            username: '',
+            password: '',
+            email: '',
+            };
+
+            this.error = false;
+            this.success = true;
+            this.submitting = false;
+
+            //this.$emit('closeModal');
+          }
+        }).catch((e) => {
+          this.error = true;
+          this.errMsg = e;
+        });
+      
     },
     clearStatus() {
       this.success = false;
