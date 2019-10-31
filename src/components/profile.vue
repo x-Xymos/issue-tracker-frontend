@@ -2,48 +2,145 @@
   <div class='profile'>
     <title>Profile</title>
     <h1>Profile</h1>
-    <h2 v-if="!this.loading">UserID: {{UserID}}</h2>
-    <p>{{errMsg}}</p>
-  </div>
+    <div v-if='!this.loading'>
+ 
+        <li v-for="field in this.account">
+          <label>{{field.displayName}}:{{field.value}}</label>
+        </li>
+        <label class="error-message">{{this.errMsg}}</label>
+        <button @click='editProfile'>Edit Profile</button>
+ 
+
+      <div v-if='this.editing'>
+        <li v-for='field in this.tempAccount'>
+          <label>{{field.displayName}}</label>
+          <input type='text'
+          v-model='field.value'
+          :class="{ 'has-error': field.error }"
+          />
+          <label>{{field.error}}</label>
+        </li>
+        <label class="error-message">{{this.errMsg}}</label>
+        <button v-if='this.editing' @click='saveProfile'>Save</button>
+        <button v-if='this.editing' @click='cancelEditing'>Cancel</button>
+      </div>
+
+    </div>
+
+    </div>
 </template>
 
 <script>
 import axios from 'axios';
-import loginApi from '@/endpoints/loginApi';
+import accountApi from '../endpoints/accountApi';
+import accountValidation from '../utils/formValidation/accountValidation';
+import FormField from './generics/FormField';
 
 export default {
   name: 'profile',
   data() {
     return {
-      error: '',
       errMsg: '',
-      UserID: '',
+      account: {
+        UserID: new FormField('UserID'),
+        username: new FormField('Username'),
+        email: new FormField('Email'),
+      },
+      tempAccount: {
+        username: new FormField('Username'),
+        email: new FormField('Email'),
+      },
       loading: true,
+      editing: false,
     };
+  },
+  methods: {
+    editProfile() {
+      /* eslint-disable */
+      for (const field in this.tempAccount) {
+          this.tempAccount[field].value = this.account[field].value;
+      }
+      /* eslint-enable */
+      this.editing = true;
+    },
+    saveProfile() {
+      /* eslint-disable */
+      for (const field in this.tempAccount) {
+        this.tempAccount[field].error = '';
+      }
+      /* eslint-enable */
+      if (accountValidation(this.tempAccount)) {
+        return;
+      }
+
+      const data = {};
+      /* eslint-disable */
+      for (const field in this.tempAccount) {
+        data[field] = this.tempAccount[field].value;
+      }
+     
+      /* eslint-enable */
+      const token = localStorage.getItem('token');
+      if (token) {
+        axios.post(accountApi.updateProfile, data, { headers: { Authorization: `Bearer ${token}` } })
+          .then((response) => {
+            if (response.data.status === true) {
+              /* eslint-disable */
+              for (const field in this.tempAccount) {
+                this.account[field].value = this.tempAccount[field].value;
+              }
+              /* eslint-enable */
+              this.clearTempAccount();
+              this.editing = false;
+            } else {
+              this.errMsg = response.data.message;
+            }
+          }).catch((e) => {
+            this.errMsg = e;
+          });
+        
+      } else {
+        this.errMsg = 'Missing JWT Token';
+      }
+    },
+    cancelEditing() {
+      this.editing = false;
+      this.clearTempAccount();
+    },
+    clearTempAccount() {
+      /* eslint-disable */
+      for (const field in this.tempAccount) {
+        this.tempAccount[field].value = '';
+      /* eslint-enable */
+      }
+    },
   },
   created() {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.get(loginApi.home, { headers: { Authorization: `Bearer ${token}` } })
+      axios.get(accountApi.getProfile, { headers: { Authorization: `Bearer ${token}` } })
         .then((response) => {
           if (response.data.status) {
-            this.UserID = response.data.UserID;
-            
+            /* eslint-disable */
+            for (const field in this.account) {
+              this.account[field].value = response.data.account[field];
+            /* eslint-enable */
+            }
           } else {
-            this.UserID = 'ERROR';
+            this.errMsg = response.data.message;
           }
         }).catch((e) => {
-          this.error = true;
           this.errMsg = e;
-          this.UserID = 'ERROR';
         });
     } else {
-      // todo: redirect or show error
-      this.UserID = 'ERROR';
+      this.errMsg = 'Missing JWT Token';
     }
     this.loading = false;
   },
 };
 </script>
 <style scoped>
+li {
+  list-style:  none;
+}
 </style>

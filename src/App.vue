@@ -8,6 +8,7 @@
 <script>
 import navbar from '@/components/navbar';
 import axios from 'axios';
+import accountApi from '@/endpoints/accountApi';
 
 export default {
 
@@ -18,7 +19,7 @@ export default {
   created() {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.get('http://0.0.0.0:8880/api/', { headers: { Authorization: `Bearer ${token}` } })
+      axios.get(accountApi.home, { headers: { Authorization: `Bearer ${token}` } })
         .then((response) => {
           if (response.data.status) {
             this.$store.dispatch('setAuthenticated', true);
@@ -38,6 +39,10 @@ export default {
 </script>
 
 <style>
+.error-message {
+  color: #d33c40;
+}
+
 body {
   display: flex;
   flex-direction: column;

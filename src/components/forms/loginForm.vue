@@ -1,94 +1,84 @@
 <template>
   <div id="login-form">
     <form @submit.prevent="handleSubmit">
-      <label>Email</label>
-      <input class="inputBox"
-        type="text"
-        :class="{ 'has-error': submitting && invalidemail }"
-        v-model="account.email"
-        @focus="clearStatus"
-        @keypress="clearStatus"
-      />
-      <label>Password</label>
-      <input class="inputBox"
-        type="text"
-        :class="{ 'has-error': submitting && invalidPassword }"
-        v-model="account.password"
-        @focus="clearStatus"
-      />
+
+        <li v-for="field in this.account">
+          <label>{{field.displayName}}</label>
+          <input class="inputBox"
+          type="text"
+          :class="{ 'has-error': field.error }"
+          v-model="field.value"
+          @focus="clearStatus"
+          @keypress="clearStatus"
+          />
+        <label class="error-message">{{field.error}}</label>
+        </li>
+
       <button>Log in</button>
+      <label class="error-message">{{this.errMsg}}</label>
     </form>
   </div>
 </template>
 <script>
 
 import axios from 'axios';
-import loginApi from '@/endpoints/loginApi';
+import accountApi from '../../endpoints/accountApi';
+import accountValidation from '../../utils/formValidation/accountValidation';
+import FormField from '../generics/FormField';
 
 export default {
   name: 'login-form',
   data() {
     return {
-      submitting: false,
-      error: false,
-      success: false,
       errMsg: '',
       account: {
-        email: '',
-        password: '',
+        email: new FormField('Email'),
+        password: new FormField('Password'),
       },
     };
   },
   methods: {
     handleSubmit() {
-      this.submitting = true;
       this.clearStatus();
-
-      if (this.invalidemail || this.invalidPassword) {
-        this.error = true;
-        return;
+      /* eslint-disable */
+      for (const field in this.account) {
+        this.account[field].error = '';
       }
 
-      axios.post(loginApi.login, this.account)
+      /* eslint-enable */
+      if (accountValidation(this.account)) {
+        return;
+      }
+      const data = {};
+      /* eslint-disable */
+      for (const field in this.account) {
+        data[field] = this.account[field].value;
+      }
+      /* eslint-enable */
+
+      axios.post(accountApi.login, data)
         .then((response) => {
           if (response.data.status === true) {
             localStorage.setItem('token', response.data.token);
             this.$store.dispatch('setAuthenticated', true);
-
-            this.account = {
-              email: '',
-              password: '',
-            };
-
-            this.error = false;
-            this.success = true;
-            this.submitting = false;
-
             this.$emit('closeModal');
+          } else {
+            this.errMsg = response.data.message;
           }
         }).catch((e) => {
-          this.error = true;
           this.errMsg = e;
-          //  console.log(e);
         });
     },
     clearStatus() {
-      this.success = false;
-      this.error = false;
       this.errMsg = '';
-    },
-  },
-  computed: {
-    invalidemail() {
-      return this.account.email === '';
-    },
-    invalidPassword() {
-      return this.account.password === '';
     },
   },
 };
 </script>
 <style scoped>
+li {
+  list-style: none;
+}
 form {
   margin-bottom: 2rem;
 }
@@ -102,10 +92,6 @@ form {
 
 [class*="-message"] {
   font-weight: 500;
-}
-
-.error-message {
-  color: #d33c40;
 }
 
 .success-message {
