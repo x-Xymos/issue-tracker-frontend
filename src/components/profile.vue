@@ -3,13 +3,13 @@
     <title>Profile</title>
     <h1>Profile</h1>
     <div v-if='!this.loading'>
- 
-        <li v-for="field in this.account">
-          <label>{{field.displayName}}:{{field.value}}</label>
-        </li>
-        <label class="error-message">{{this.errMsg}}</label>
-        <button @click='editProfile'>Edit Profile</button>
- 
+
+        <div v-if='!this.editing'>
+          <li v-for="field in this.account">
+            <label>{{field.displayName}}:{{field.value}}</label>
+          </li>
+          <button @click='editProfile'>Edit Profile</button>
+        </div>
 
       <div v-if='this.editing'>
         <li v-for='field in this.tempAccount'>
@@ -18,7 +18,7 @@
           v-model='field.value'
           :class="{ 'has-error': field.error }"
           />
-          <label>{{field.error}}</label>
+         <label class="error-message">{{field.error}}</label>
         </li>
         <label class="error-message">{{this.errMsg}}</label>
         <button v-if='this.editing' @click='saveProfile'>Save</button>
@@ -42,7 +42,6 @@ export default {
     return {
       errMsg: '',
       account: {
-        UserID: new FormField('UserID'),
         username: new FormField('Username'),
         email: new FormField('Email'),
       },
@@ -68,6 +67,7 @@ export default {
       for (const field in this.tempAccount) {
         this.tempAccount[field].error = '';
       }
+   
       /* eslint-enable */
       if (accountValidation(this.tempAccount)) {
         return;
@@ -76,7 +76,11 @@ export default {
       const data = {};
       /* eslint-disable */
       for (const field in this.tempAccount) {
-        data[field] = this.tempAccount[field].value;
+        if  (this.tempAccount[field].value != this.account[field].value) {
+          data[field] = this.tempAccount[field].value;
+        } else {
+          data[field] = '';
+        }
       }
      
       /* eslint-enable */
@@ -92,13 +96,13 @@ export default {
               /* eslint-enable */
               this.clearTempAccount();
               this.editing = false;
+              this.errMsg = '';
             } else {
               this.errMsg = response.data.message;
             }
           }).catch((e) => {
             this.errMsg = e;
           });
-        
       } else {
         this.errMsg = 'Missing JWT Token';
       }
@@ -106,11 +110,13 @@ export default {
     cancelEditing() {
       this.editing = false;
       this.clearTempAccount();
+      this.errMsg = '';
     },
     clearTempAccount() {
       /* eslint-disable */
       for (const field in this.tempAccount) {
         this.tempAccount[field].value = '';
+        this.tempAccount[field].error = '';
       /* eslint-enable */
       }
     },
