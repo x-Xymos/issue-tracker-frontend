@@ -19,19 +19,23 @@ export default {
   created() {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.get(accountApi.home, { headers: { Authorization: `Bearer ${token}` } })
+      axios.get(accountApi.profile, { headers: { Authorization: `Bearer ${token}`, params: '{"username": ""}' } })
         .then((response) => {
           if (response.data.status) {
+            this.$store.dispatch('setUsername', response.data.account.username);
             this.$store.dispatch('setAuthenticated', true);
           } else {
+            this.$store.dispatch('setUsername', '');
             this.$store.dispatch('setAuthenticated', false);
           }
         }).catch((e) => {
           this.error = true;
           this.errMsg = e;
+          this.$store.dispatch('setUsername', '');
           this.$store.dispatch('setAuthenticated', false);
         });
     } else {
+      this.$store.dispatch('setUsername', '');
       this.$store.dispatch('setAuthenticated', false);
     }
   },

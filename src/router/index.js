@@ -8,6 +8,7 @@ import auth from './middleware/auth';
 Vue.use(Router);
 
 const router = new Router({
+  mode: 'history',
   routes: [
     {
       path: '/',
@@ -20,7 +21,7 @@ const router = new Router({
       component: home,
     },
     {
-      path: '/profile',
+      path: '/profile/:username',
       name: 'profile',
       component: profile,
       meta: {

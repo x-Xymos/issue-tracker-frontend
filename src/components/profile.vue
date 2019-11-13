@@ -1,33 +1,31 @@
 <template>
-  <div class='profile'>
-    <title>Profile</title>
-    <h1>Profile</h1>
-    <div v-if='!this.loading'>
-
-        <div v-if='!this.editing'>
-          <li v-for="field in this.account">
-            <label>{{field.displayName}}:{{field.value}}</label>
-          </li>
-          <button @click='editProfile'>Edit Profile</button>
-        </div>
+<div class='profile'>
+  <title>Profile</title>
+  <h1>Profile</h1>
+  <div v-if='!this.loading && !this.error'>
+      <div v-if='!this.editing'>
+        <li v-for="field in this.account">
+          <label v-if='field.value != ""'>{{field.displayName}}: {{field.value}}</label>
+        </li>
+        <button v-if='this.accountOwner' @click='editProfile'>Edit Profile</button>
+      </div>
 
       <div v-if='this.editing'>
         <li v-for='field in this.tempAccount'>
           <label>{{field.displayName}}</label>
-          <input type='text'
+          <input
+          :type="field.type"
           v-model='field.value'
           :class="{ 'has-error': field.error }"
           />
-         <label class="error-message">{{field.error}}</label>
+          <label class="error-message">{{field.error}}</label>
         </li>
-        <label class="error-message">{{this.errMsg}}</label>
         <button v-if='this.editing' @click='saveProfile'>Save</button>
         <button v-if='this.editing' @click='cancelEditing'>Cancel</button>
       </div>
-
-    </div>
-
-    </div>
+  </div>
+  <label class="error-message">{{this.errMsg}}</label>
+</div>
 </template>
 
 <script>
@@ -42,18 +40,51 @@ export default {
     return {
       errMsg: '',
       account: {
-        username: new FormField('Username'),
-        email: new FormField('Email'),
+        username: new FormField({ displayName: 'Username', type: 'text' }),
+        email: new FormField({ displayName: 'Email', type: 'email' }),
+        createdAt: new FormField({ displayName: 'Join Date', type: 'text' }),
       },
       tempAccount: {
-        username: new FormField('Username'),
-        email: new FormField('Email'),
+        username: new FormField({ displayName: 'Username', type: 'text' }),
+        email: new FormField({ displayName: 'Email', type: 'email' }),
       },
+      accountOwner: false,
       loading: true,
       editing: false,
+      error: false,
     };
   },
   methods: {
+    loadProfile() {
+      this.clearErrors();
+      const token = localStorage.getItem('token');
+      if (token) {
+        axios.get(accountApi.profile, { headers: { Authorization: `Bearer ${token}`, params: `{"username": "${this.$route.params.username}" }` } })
+          .then((response) => {
+            if (response.data.status) {
+              /* eslint-disable */
+              for (const field in this.account) {
+                this.account[field].value = response.data.account[field];
+                /* eslint-enable */
+                this.accountOwner = response.data.accountOwner;
+                if (this.accountOwner) {
+                  this.$store.dispatch('setUsername', this.account.username.value);
+                }
+              }
+            } else {
+              this.errMsg = response.data.message;
+              this.error = true;
+            }
+          }).catch((e) => {
+            this.errMsg = e;
+            this.error = true;
+          });
+      } else {
+        this.errMsg = 'Missing JWT Token';
+        this.error = true;
+      }
+      this.loading = false;
+    },
     editProfile() {
       /* eslint-disable */
       for (const field in this.tempAccount) {
@@ -73,43 +104,54 @@ export default {
         return;
       }
 
+      let post = false;
       const data = {};
       /* eslint-disable */
       for (const field in this.tempAccount) {
-        if  (this.tempAccount[field].value != this.account[field].value) {
+        if (this.tempAccount[field].value != this.account[field].value) {
           data[field] = this.tempAccount[field].value;
+          post = true;
         } else {
           data[field] = '';
         }
       }
-     
       /* eslint-enable */
-      const token = localStorage.getItem('token');
-      if (token) {
-        axios.post(accountApi.updateProfile, data, { headers: { Authorization: `Bearer ${token}` } })
-          .then((response) => {
-            if (response.data.status === true) {
-              /* eslint-disable */
-              for (const field in this.tempAccount) {
-                this.account[field].value = this.tempAccount[field].value;
+      if (post) {
+        const token = localStorage.getItem('token');
+        if (token) {
+          axios.post(accountApi.profile, data, { headers: { Authorization: `Bearer ${token}` } })
+            .then((response) => {
+              if (response.data.status === true) {
+                /* eslint-disable */
+                for (const field in this.tempAccount) {
+                  this.account[field].value = this.tempAccount[field].value;
+                }
+                /* eslint-enable */
+                this.clearTempAccount();
+                history.replaceState(null, null, `/profile/${this.account.username.value}`);
+                this.$store.dispatch('setUsername', this.account.username.value);
+                this.editing = false;
+                this.errMsg = '';
+              } else {
+                this.errMsg = response.data.message;
               }
-              /* eslint-enable */
-              this.clearTempAccount();
-              this.editing = false;
-              this.errMsg = '';
-            } else {
-              this.errMsg = response.data.message;
-            }
-          }).catch((e) => {
-            this.errMsg = e;
-          });
+            }).catch((e) => {
+              this.errMsg = e;
+            });
+        } else {
+          this.errMsg = 'Missing JWT Token';
+        }
       } else {
-        this.errMsg = 'Missing JWT Token';
+        this.cancelEditing();
       }
     },
     cancelEditing() {
       this.editing = false;
       this.clearTempAccount();
+      this.errMsg = '';
+    },
+    clearErrors() {
+      this.error = false;
       this.errMsg = '';
     },
     clearTempAccount() {
@@ -121,27 +163,15 @@ export default {
       }
     },
   },
+  watch: {
+    /* eslint-disable */
+  '$route.params.username' : function () {
+    this.loadProfile();
+  },
+  /* eslint-enable */
+  },
   created() {
-    const token = localStorage.getItem('token');
-    if (token) {
-      axios.get(accountApi.getProfile, { headers: { Authorization: `Bearer ${token}` } })
-        .then((response) => {
-          if (response.data.status) {
-            /* eslint-disable */
-            for (const field in this.account) {
-              this.account[field].value = response.data.account[field];
-            /* eslint-enable */
-            }
-          } else {
-            this.errMsg = response.data.message;
-          }
-        }).catch((e) => {
-          this.errMsg = e;
-        });
-    } else {
-      this.errMsg = 'Missing JWT Token';
-    }
-    this.loading = false;
+    this.loadProfile();
   },
 };
 </script>

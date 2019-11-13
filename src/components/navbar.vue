@@ -12,7 +12,7 @@
           <a class="nav-link" @click="toggleAuthModal('signup')" >Sign Up</a>
         </li>
         <li v-if="authenticationStatus" class="nav-item">
-          <router-link class="nav-link" to="/profile">Profile</router-link>
+          <router-link class="nav-link" :to="profileLink">Profile</router-link>
         </li>
         <li v-if="authenticationStatus" class="nav-item">
            <a class="nav-link" @click="logOut()" >Log out</a>
@@ -61,6 +61,7 @@ export default {
     },
     logOut() {
       this.$store.dispatch('setAuthenticated', false);
+      this.$store.dispatch('setUsername', '');
       if (localStorage.getItem('token')) {
         localStorage.removeItem('token');
       }
@@ -71,6 +72,9 @@ export default {
   computed: {
     authenticationStatus() {
       return this.$store.state.authenticated;
+    },
+    profileLink() {
+      return `/profile/${this.$store.state.username}`;
     },
   },
 };

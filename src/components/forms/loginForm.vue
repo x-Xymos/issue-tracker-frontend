@@ -5,7 +5,7 @@
         <li v-for="field in this.account">
           <label>{{field.displayName}}</label>
           <input class="inputBox"
-          type="text"
+          :type="field.type"
           :class="{ 'has-error': field.error }"
           v-model="field.value"
           @focus="clearStatus"
@@ -32,8 +32,8 @@ export default {
     return {
       errMsg: '',
       account: {
-        email: new FormField('Email'),
-        password: new FormField('Password'),
+        email: new FormField({ displayName: 'Email', type: 'email' }),
+        password: new FormField({ displayName: 'Password', type: 'password' }),
       },
     };
   },
@@ -61,6 +61,7 @@ export default {
           if (response.data.status === true) {
             localStorage.setItem('token', response.data.token);
             this.$store.dispatch('setAuthenticated', true);
+            this.$store.dispatch('setUsername', response.data.account.username);
             this.$emit('closeModal');
           } else {
             this.errMsg = response.data.message;

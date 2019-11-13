@@ -5,7 +5,7 @@
        <li v-for="field in this.account">
           <label>{{field.displayName}}</label>
           <input class="inputBox"
-          type="text"
+          :type="field.type"
           :class="{ 'has-error': field.error }"
           v-model="field.value"
           @focus="clearStatus"
@@ -33,9 +33,9 @@ export default {
       errMsg: '',
       success: false,
       account: {
-        username: new FormField('Username'),
-        email: new FormField('Email'),
-        password: new FormField('Password'),
+        username: new FormField({ displayName: 'Username', type: 'text' }),
+        email: new FormField({ displayName: 'Email', type: 'email' }),
+        password: new FormField({ displayName: 'Password', type: 'password' }),
       },
     };
   },
