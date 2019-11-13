@@ -1,4 +1,5 @@
 ## Build Setup
+Requires the backend to be running https://github.com/x-Xymos/issue-tracker-backend
 
 ``` bash
 # install dependencies
