@@ -107,6 +107,7 @@ export default {
       let post = false;
       const data = {};
       /* eslint-disable */
+      this.tempAccount.email.value =  this.tempAccount.email.value.toLowerCase();
       for (const field in this.tempAccount) {
         if (this.tempAccount[field].value != this.account[field].value) {
           data[field] = this.tempAccount[field].value;
@@ -115,11 +116,12 @@ export default {
           data[field] = '';
         }
       }
+
       /* eslint-enable */
       if (post) {
         const token = localStorage.getItem('token');
         if (token) {
-          axios.post(accountApi.profile, data, { headers: { Authorization: `Bearer ${token}` } })
+          axios.put(accountApi.profile, data, { headers: { Authorization: `Bearer ${token}` } })
             .then((response) => {
               if (response.data.status === true) {
                 /* eslint-disable */
