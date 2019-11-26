@@ -59,6 +59,7 @@ export default {
       axios.post(accountApi.login, data)
         .then((response) => {
           if (response.data.status === true) {
+            localStorage.setItem('username', response.data.account.username);
             localStorage.setItem('token', response.data.token);
             this.$store.dispatch('setAuthenticated', true);
             this.$store.dispatch('setUsername', response.data.account.username);

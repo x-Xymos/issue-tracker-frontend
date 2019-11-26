@@ -58,8 +58,11 @@ export default {
     loadProfile() {
       this.clearErrors();
       const token = localStorage.getItem('token');
+      const params = { username: `${this.$route.params.username}` };
+      const headers = { Authorization: `Bearer ${token}` };
+
       if (token) {
-        axios.get(accountApi.profile, { headers: { Authorization: `Bearer ${token}`, params: `{"username": "${this.$route.params.username}" }` } })
+        axios.get(accountApi.profile, { headers, params })
           .then((response) => {
             if (response.data.status) {
               /* eslint-disable */
@@ -132,6 +135,7 @@ export default {
                 this.clearTempAccount();
                 history.replaceState(null, null, `/profile/${this.account.username.value}`);
                 this.$store.dispatch('setUsername', this.account.username.value);
+                localStorage.setItem('username',  this.account.username.value);
                 this.editing = false;
                 this.errMsg = '';
               } else {

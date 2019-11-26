@@ -17,9 +17,15 @@ export default {
     navbar,
   },
   created() {
+    // when the app is created we check if there's a token and username
+    // stored in local storage to persist the login session
     const token = localStorage.getItem('token');
-    if (token) {
-      axios.get(accountApi.profile, { headers: { Authorization: `Bearer ${token}`, params: '{"username": ""}' } })
+    const username = localStorage.getItem('username');
+    const params = { username };
+    const headers = { Authorization: `Bearer ${token}` };
+
+    if (token && username) {
+      axios.get(accountApi.profile, { headers, params })
         .then((response) => {
           if (response.data.status) {
             this.$store.dispatch('setUsername', response.data.account.username);

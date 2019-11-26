@@ -65,6 +65,9 @@ export default {
       if (localStorage.getItem('token')) {
         localStorage.removeItem('token');
       }
+      if (localStorage.getItem('username')) {
+        localStorage.removeItem('username');
+      }
       this.$router.push({ name: 'home' });
       this.$router.go();
     },
