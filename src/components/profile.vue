@@ -16,7 +16,6 @@
           <input
           :type="field.type"
           v-model='field.value'
-          :class="{ 'has-error': field.error }"
           />
           <label class="error-message">{{field.error}}</label>
         </li>
@@ -55,6 +54,9 @@ export default {
     };
   },
   methods: {
+    setFieldError(field, errMsg){
+      this.tempAccount[field].error = errMsg;
+    },
     loadProfile() {
       this.clearErrors();
       const token = localStorage.getItem('token');
@@ -124,7 +126,13 @@ export default {
       if (post) {
         const token = localStorage.getItem('token');
         if (token) {
-          axios.put(accountApi.profile, data, { headers: { Authorization: `Bearer ${token}` } })
+        var instance = axios.create({
+            validateStatus: function (status) {
+              //letting 400 responses through because we want to capture the error message from the backend
+              return status >= 200 && status < 300 || status == 400;
+            }
+        });
+          instance.put(accountApi.profile, data, { headers: { Authorization: `Bearer ${token}` } })
             .then((response) => {
               if (response.data.status === true) {
                 /* eslint-disable */
@@ -139,10 +147,17 @@ export default {
                 this.editing = false;
                 this.errMsg = '';
               } else {
-                this.errMsg = response.data.message;
+                if (response.data.badField) {
+                    this.clearErrors();
+                    this.setFieldError(response.data.badField, response.data.message);
+                } else {
+                  this.errMsg = response.data.message;
+                }
               }
             }).catch((e) => {
               this.errMsg = e;
+                console.log(response.data)
+
             });
         } else {
           this.errMsg = 'Missing JWT Token';

@@ -38,6 +38,9 @@ export default {
     };
   },
   methods: {
+    setFieldError(field, errMsg){
+      this.account[field].error = errMsg;
+    },
     handleSubmit() {
       this.clearStatus();
       /* eslint-disable */
@@ -55,8 +58,13 @@ export default {
         data[field] = this.account[field].value;
       }
       /* eslint-enable */
-
-      axios.post(accountApi.login, data)
+        var instance = axios.create({
+          validateStatus: function (status) {
+            //letting 400 responses through because we want to capture the error message from the backend
+            return status >= 200 && status < 300 || status == 400;
+          }
+        });
+      instance.post(accountApi.login, data)
         .then((response) => {
           if (response.data.status === true) {
             localStorage.setItem('username', response.data.account.username);
@@ -65,7 +73,11 @@ export default {
             this.$store.dispatch('setUsername', response.data.account.username);
             this.$emit('closeModal');
           } else {
-            this.errMsg = response.data.message;
+           if (response.data.badField) {
+                    this.setFieldError(response.data.badField, response.data.message);
+                } else {
+                  this.errMsg = response.data.message;
+                }
           }
         }).catch((e) => {
           this.errMsg = e;
